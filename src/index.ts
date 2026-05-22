@@ -314,7 +314,7 @@ const tools: Tool[] = [
   {
     name: "list_flow_analytics",
     description:
-      "Aggregated pass-rate and run-count analytics per Maestro flow file over a lookback window. Use to identify flaky flows (low pass_rate but many passed_runs) vs. genuinely broken flows.",
+      "Aggregated pass-rate and run-count analytics per Maestro flow file over a lookback window. Use to identify flaky flows (low pass_rate but many passed_runs) vs. genuinely broken flows. Returns flow_name, file_name, pass_rate, passed_runs, failed_runs, total_runs, avg_duration, last_run_at, tags, daily_data per flow.",
     inputSchema: {
       type: "object",
       properties: {
@@ -329,6 +329,26 @@ const tools: Tool[] = [
     },
     execute: async (args) =>
       asResult(await dcFetch({ path: "/flows", query: args as Record<string, string | number | undefined> })),
+  },
+  {
+    name: "get_flow_runs",
+    description:
+      "List individual runs for a specific Maestro flow file. Returns id, status, createdAt, durationSeconds, failReason, testUploadId, uploadName per run. Use to drill into the history of one flow — e.g. after list_flow_analytics surfaces a flaky or broken flow.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        fileName: { type: "string", description: "Flow file name to look up (e.g. login.yaml)." },
+        platform: { type: "string", enum: ["android", "ios"], description: "Filter by platform." },
+        appId: { type: "string", description: "Filter by app bundle id." },
+        limit: { type: "integer", minimum: 1, description: "Max runs to return." },
+        startDate: { type: "string", description: "ISO 8601 start of range." },
+        endDate: { type: "string", description: "ISO 8601 end of range." },
+      },
+      required: ["fileName"],
+      additionalProperties: false,
+    },
+    execute: async (args) =>
+      asResult(await dcFetch({ path: "/flows/runs", query: args as Record<string, string | number | undefined> })),
   },
 ];
 

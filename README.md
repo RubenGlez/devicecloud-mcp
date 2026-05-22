@@ -94,6 +94,7 @@ You should see a JSON-shaped response with an `uploads` array. If instead you ge
 | `get_html_report` | Downloads + auto-unzips the HTML report. Returns the extraction dir and an inventory with `failureScreenshots[]` highlighted (these are the highest-signal debugging artifact). |
 | `download_artifacts` | Zip of raw artifacts (logs, screenshots, video). `results: "FAILED"` (default) or `"ALL"`. Saves to `/tmp` by default; not auto-unzipped. |
 | `list_flow_analytics` | Per-flow pass rate, run counts, avg duration over a lookback window (default 14 days). Useful to tell flakes from genuinely-broken flows. |
+| `get_flow_runs` | Individual run history for one flow file (`fileName` required). Returns status, duration, `failReason`, and the `uploadId` each run belongs to. Use to drill into a specific flow after `list_flow_analytics`. |
 
 ### Upload-naming convention
 
