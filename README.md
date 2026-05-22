@@ -23,12 +23,31 @@ The server is read-only against the DeviceCloud API.
 ## Install
 
 ```sh
-cd /path/to/devicecloud-mcp
-nvm use        # picks up .nvmrc (Node 24)
-pnpm install
+git clone https://github.com/RubenGlez/devicecloud-mcp
+cd devicecloud-mcp
+nvm use           # picks up .nvmrc (Node 24)
+pnpm install      # also runs the build — dist/ is created automatically
 ```
 
-That's it — no build step needed. The server runs straight from TypeScript via `tsx`.
+## Quickest setup (no clone required)
+
+If you just want to use the server without cloning the repo, point your client at `npx`:
+
+```json
+{
+  "mcpServers": {
+    "devicecloud": {
+      "command": "npx",
+      "args": ["-y", "devicecloud-mcp"],
+      "env": {
+        "DEVICE_CLOUD_API_KEY": "<your-key>"
+      }
+    }
+  }
+}
+```
+
+This works for Claude Code (`.mcp.json`), Claude Desktop, Cursor, and Windsurf — wherever you put the config, `npx` fetches and runs the latest published version automatically.
 
 ## Configure your assistant
 
@@ -47,8 +66,8 @@ Add this entry to a `.mcp.json` at the root of any project where you want the to
 {
   "mcpServers": {
     "devicecloud": {
-      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
       "env": {
         "DEVICE_CLOUD_API_KEY": "${DEVICE_CLOUD_API_KEY}"
       }
@@ -78,8 +97,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
 {
   "mcpServers": {
     "devicecloud": {
-      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
       "env": {
         "DEVICE_CLOUD_API_KEY": "<your-key>"
       }
@@ -98,8 +117,8 @@ Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` at the project root (
 {
   "mcpServers": {
     "devicecloud": {
-      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
       "env": {
         "DEVICE_CLOUD_API_KEY": "<your-key>"
       }
@@ -116,8 +135,8 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
 {
   "mcpServers": {
     "devicecloud": {
-      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
       "env": {
         "DEVICE_CLOUD_API_KEY": "<your-key>"
       }
@@ -180,14 +199,22 @@ DeviceCloud uploads are created when you trigger a run — via the CLI, a CI ste
 
 ```
 devicecloud-mcp/
-├── src/index.ts        # the server (single file)
+├── src/
+│   ├── index.ts          # server entry point
+│   ├── utils.ts          # pure functions (stripCRLF, filterResults)
+│   └── index.test.ts     # unit tests
+├── dist/                 # compiled output (built by pnpm install)
+├── .github/workflows/
+│   └── ci.yml            # type-check, build, test on every push
 ├── package.json
 ├── tsconfig.json
 ├── pnpm-lock.yaml
 ├── .nvmrc
 ├── .npmrc
+├── pnpm-workspace.yaml
+├── LICENSE
 ├── .gitignore
 └── README.md
 ```
 
-No build artifacts are checked in; `tsx` runs the TypeScript source directly. The repo uses pnpm — `pnpm-lock.yaml` is the lockfile.
+`pnpm install` compiles `src/` to `dist/` automatically via the `prepare` script. The repo uses pnpm — `pnpm-lock.yaml` is the lockfile.

@@ -9,15 +9,12 @@ importers:
   .:
     dependencies:
       '@modelcontextprotocol/sdk':
-        specifier: ^1.0.4
+        specifier: ^1.29.0
         version: 1.29.0(zod@3.25.76)
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
     devDependencies:
       '@types/node':
-        specifier: ^20.14.0
-        version: 20.19.41
+        specifier: ^22.0.0
+        version: 22.19.19
       tsx:
         specifier: ^4.19.0
         version: 4.22.3
@@ -199,8 +196,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@types/node@20.19.41':
-    resolution: {integrity: sha512-ECymXOukMnOoVkC2bb1Vc/w/836DXncOg5m8Xj1RH7xSHZJWNYY6Zh7EH477vcnD5egKNNfy2RpNOmuChhFPgQ==}
+  '@types/node@22.19.19':
+    resolution: {integrity: sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==}
 
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
@@ -685,7 +682,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@types/node@20.19.41':
+  '@types/node@22.19.19':
     dependencies:
       undici-types: 6.21.0
 

@@ -8,6 +8,7 @@ import {
 import { spawn } from "node:child_process";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join, resolve as resolvePath } from "node:path";
+import { stripCRLF, filterResults } from "./utils.js";
 
 const BASE_URL = process.env.DEVICE_CLOUD_BASE_URL ?? "https://api.devicecloud.dev";
 const API_KEY = process.env.DEVICE_CLOUD_API_KEY;
@@ -52,18 +53,6 @@ async function dcFetch(opts: FetchOpts & { binary?: boolean }): Promise<TextResp
   return { status: res.status, body: await res.text(), contentType };
 }
 
-// DeviceCloud upload `name` fields come back with trailing \r\n from CI; strip on every string field.
-function stripCRLF(value: unknown): unknown {
-  if (typeof value === "string") return value.replace(/\r\n+$/g, "").replace(/\r\n/g, "\n");
-  if (Array.isArray(value)) return value.map(stripCRLF);
-  if (value && typeof value === "object") {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value)) out[k] = stripCRLF(v);
-    return out;
-  }
-  return value;
-}
-
 type ToolResponse = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
 function asResult(res: { status: number; body: string; contentType: string }): ToolResponse {
@@ -83,14 +72,6 @@ function asResult(res: { status: number; body: string; contentType: string }): T
     };
   }
   return { content: [{ type: "text", text: payload }] };
-}
-
-function filterResults(
-  json: Record<string, unknown> & { results?: Array<Record<string, unknown>> },
-  status: string,
-): string {
-  const filtered = (json.results ?? []).filter((r) => r["status"] === status);
-  return JSON.stringify({ ...json, results: filtered, filteredBy: status }, null, 2);
 }
 
 async function unzipTo(zipPath: string, destDir: string): Promise<void> {
