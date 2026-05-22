@@ -1,6 +1,6 @@
 # devicecloud-mcp
 
-A small MCP server that exposes [DeviceCloud](https://console.devicecloud.dev) (the platform we use to run Maestro flows on real devices) as tools that any MCP-aware assistant — Claude Code, Cursor, Claude Desktop, etc. — can call directly.
+A small MCP server that exposes [DeviceCloud](https://console.devicecloud.dev) as tools that any MCP-aware assistant — Claude Code, Cursor, Claude Desktop, etc. — can call directly. DeviceCloud is a platform for running Maestro flows on real devices.
 
 It lets the assistant:
 
@@ -18,7 +18,7 @@ The server is read-only against the DeviceCloud API.
 
 - **Node.js 24 LTS** — use `nvm install 24 && nvm use 24`, or `nvm use` if you already have it
 - **pnpm** — `npm i -g pnpm` or `corepack enable pnpm`
-- **A DeviceCloud API key** — ping the mobile team if you don't have one. It is the same key you'd put in `x-app-api-key` when calling the API directly.
+- **A DeviceCloud API key** — generate one at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
 
 ## Install
 
@@ -99,29 +99,24 @@ You should see a JSON-shaped response with an `uploads` array. If instead you ge
 
 ### Upload-naming convention
 
-Uploads are created by CI with a `name` shaped like the commit message ending in `(<short-sha>)`:
+Uploads are typically named after the commit or build that triggered them. A common convention is to include the short SHA:
 
 ```
-fix(e2e): use password meeting complexity rule in register flow (53a3cdf1d)
+fix(login): handle expired session (a1b2c3d4)
 ```
 
-Filter with `name = "*53a3cdf1d*"` to find every upload for a specific commit. The wildcard is `*`, not `%`.
+Filter with `name = "*a1b2c3d4*"` to find every upload for a specific commit. The wildcard is `*`, not `%`.
 
 ### When uploads do and don't exist
 
-DeviceCloud uploads are not produced for every push. They run on:
-
-- merges to `master` (automatic), or
-- manual CI triggers (re-running the Maestro workflow from CircleCI by hand).
-
-A feature branch can have many commits with zero uploads — that's normal, not a bug.
+DeviceCloud uploads are created when you trigger a run — via the CLI, a CI step, the GitHub Action, or the API directly. Whether a given commit has an upload depends entirely on your CI setup. If `list_uploads` returns nothing for a SHA you expect, the run probably wasn't triggered for that commit.
 
 ## Troubleshooting
 
 - **`DEVICE_CLOUD_API_KEY env var is required`** — the variable isn't visible to the spawned MCP. Export it from `~/.zshrc` / `~/.bashrc`, restart your assistant.
 - **`unzip failed`** (from `get_html_report`) — the `unzip` binary is missing or crashed. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
-- **HTTP 401 / 403** — the API key is wrong or revoked. Re-confirm the key with the mobile team.
-- **Empty `list_uploads` for your SHA** — Maestro probably wasn't triggered on that commit. See "When uploads do and don't exist" above.
+- **HTTP 401 / 403** — the API key is wrong or revoked. Regenerate it at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
+- **Empty `list_uploads` for your SHA** — a run probably wasn't triggered for that commit. See "When uploads do and don't exist" above.
 
 ## Files
 
