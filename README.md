@@ -10,6 +10,7 @@ It lets the assistant:
 - download and auto-unzip the HTML report (with failure screenshots highlighted)
 - download raw artifacts (logs, screenshots, video) as a zip
 - query per-flow pass-rate analytics over a lookback window
+- drill into run history for a specific flow file
 
 The server is read-only against the DeviceCloud API.
 
@@ -23,7 +24,7 @@ The server is read-only against the DeviceCloud API.
 
 ```sh
 cd /path/to/devicecloud-mcp
-nvm use        # picks up .nvmrc (Node 22)
+nvm use        # picks up .nvmrc (Node 24)
 pnpm install
 ```
 
@@ -118,7 +119,7 @@ A feature branch can have many commits with zero uploads — that's normal, not 
 ## Troubleshooting
 
 - **`DEVICE_CLOUD_API_KEY env var is required`** — the variable isn't visible to the spawned MCP. Export it from `~/.zshrc` / `~/.bashrc`, restart your assistant.
-- **`unzip exited with code N`** (from `get_html_report`) — the `unzip` binary is missing. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
+- **`unzip failed`** (from `get_html_report`) — the `unzip` binary is missing or crashed. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
 - **HTTP 401 / 403** — the API key is wrong or revoked. Re-confirm the key with the mobile team.
 - **Empty `list_uploads` for your SHA** — Maestro probably wasn't triggered on that commit. See "When uploads do and don't exist" above.
 
