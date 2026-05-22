@@ -70,9 +70,67 @@ export DEVICE_CLOUD_API_KEY="<your-key>"
 
 If you want it available everywhere instead of per-project, add the same `devicecloud` block under `mcpServers` in `~/.claude.json`.
 
-### Cursor / Claude Desktop / other MCP clients
+### Claude Desktop
 
-Same idea — they all accept a stdio MCP server with `command`, `args`, and `env`. Use the same JSON shape as above; consult the client's docs for where to put it.
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+```json
+{
+  "mcpServers": {
+    "devicecloud": {
+      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "env": {
+        "DEVICE_CLOUD_API_KEY": "<your-key>"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop after saving. A tools icon appears in the chat input once the server connects.
+
+### Cursor
+
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` at the project root (project-scoped):
+
+```json
+{
+  "mcpServers": {
+    "devicecloud": {
+      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "env": {
+        "DEVICE_CLOUD_API_KEY": "<your-key>"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Edit `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "devicecloud": {
+      "command": "/ABSOLUTE/PATH/TO/devicecloud-mcp/node_modules/.bin/tsx",
+      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/src/index.ts"],
+      "env": {
+        "DEVICE_CLOUD_API_KEY": "<your-key>"
+      }
+    }
+  }
+}
+```
+
+### Other MCP-compatible clients
+
+Any client that supports stdio MCP servers uses the same `{ command, args, env }` shape. Consult the client's docs for the config file location.
+
+> **Note:** OpenAI products (ChatGPT, Codex, the Assistants API) use their own tool protocol and do not support MCP servers.
 
 ## Verify
 
