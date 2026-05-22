@@ -79,7 +79,7 @@ async function unzipTo(zipPath: string, destDir: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const proc = spawn("unzip", ["-o", "-q", zipPath, "-d", destDir], { stdio: "ignore" });
     proc.on("error", reject);
-    proc.on("exit", (code, signal) =>
+    proc.on("exit", (code: number | null, signal: NodeJS.Signals | null) =>
       code === 0 ? resolve() : reject(new Error(signal ? `unzip killed by signal ${signal}` : `unzip exited with code ${code}`)),
     );
   });

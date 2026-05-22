@@ -2,7 +2,14 @@
   "name": "devicecloud-mcp",
   "version": "0.1.0",
   "description": "MCP server for DeviceCloud — query Maestro test uploads, results, analytics, and artifacts from any MCP-compatible AI assistant",
-  "keywords": ["mcp", "model-context-protocol", "devicecloud", "maestro", "testing", "mobile"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "devicecloud",
+    "maestro",
+    "testing",
+    "mobile"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RubenGlez/devicecloud-mcp.git"
@@ -34,8 +41,8 @@
     "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsx": "^4.19.0",
-    "typescript": "^5.5.0"
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
   }
 }
