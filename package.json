@@ -35,7 +35,8 @@
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "prepare": "tsc",
-    "test": "node --import tsx/esm --test src/index.test.ts"
+    "test": "node --import tsx/esm --test src/index.test.ts",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
