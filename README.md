@@ -205,7 +205,8 @@ devicecloud-mcp/
 │   └── index.test.ts     # unit tests
 ├── dist/                 # compiled output (built by pnpm install)
 ├── .github/workflows/
-│   └── ci.yml            # type-check, build, test on every push
+│   ├── ci.yml            # type-check, build, test on every push and PR
+│   └── publish.yml       # publishes to npm when a v* tag is pushed
 ├── package.json
 ├── tsconfig.json
 ├── pnpm-lock.yaml
