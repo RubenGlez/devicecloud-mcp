@@ -14,24 +14,9 @@ It lets the assistant:
 
 The server is read-only against the DeviceCloud API.
 
-## Prerequisites
-
-- **Node.js 24 LTS** — use `nvm install 24 && nvm use 24`, or `nvm use` if you already have it
-- **pnpm** — `npm i -g pnpm` or `corepack enable pnpm`
-- **A DeviceCloud API key** — generate one at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
-
 ## Install
 
-```sh
-git clone https://github.com/RubenGlez/devicecloud-mcp
-cd devicecloud-mcp
-nvm use           # picks up .nvmrc (Node 24)
-pnpm install      # also runs the build — dist/ is created automatically
-```
-
-## Quickest setup (no clone required)
-
-If you just want to use the server without cloning the repo, point your client at `npx`:
+Add this to your MCP client config:
 
 ```json
 {
@@ -47,27 +32,22 @@ If you just want to use the server without cloning the repo, point your client a
 }
 ```
 
-This works for Claude Code (`.mcp.json`), Claude Desktop, Cursor, and Windsurf — wherever you put the config, `npx` fetches and runs the latest published version automatically.
+Get your API key at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
 
 ## Configure your assistant
 
-Pick the section that matches your tool. In every case you need to:
-
-1. Point the assistant at this folder.
-2. Pass `DEVICE_CLOUD_API_KEY` through to the spawned process.
-
-Replace `/ABSOLUTE/PATH/TO/devicecloud-mcp` with wherever you put this folder.
+The config block above is the same for every client — only the file location differs.
 
 ### Claude Code (project-scoped, `.mcp.json`)
 
-Add this entry to a `.mcp.json` at the root of any project where you want the tools available:
+Add to a `.mcp.json` at the root of any project where you want the tools available:
 
 ```json
 {
   "mcpServers": {
     "devicecloud": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "devicecloud-mcp"],
       "env": {
         "DEVICE_CLOUD_API_KEY": "${DEVICE_CLOUD_API_KEY}"
       }
@@ -91,59 +71,15 @@ If you want it available everywhere instead of per-project, add the same `device
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
-
-```json
-{
-  "mcpServers": {
-    "devicecloud": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
-      "env": {
-        "DEVICE_CLOUD_API_KEY": "<your-key>"
-      }
-    }
-  }
-}
-```
-
-Restart Claude Desktop after saving. A tools icon appears in the chat input once the server connects.
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Restart Claude Desktop after saving — a tools icon appears in the chat input once the server connects.
 
 ### Cursor
 
-Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` at the project root (project-scoped):
-
-```json
-{
-  "mcpServers": {
-    "devicecloud": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
-      "env": {
-        "DEVICE_CLOUD_API_KEY": "<your-key>"
-      }
-    }
-  }
-}
-```
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` at the project root (project-scoped).
 
 ### Windsurf
 
-Edit `~/.codeium/windsurf/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "devicecloud": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/devicecloud-mcp/dist/index.js"],
-      "env": {
-        "DEVICE_CLOUD_API_KEY": "<your-key>"
-      }
-    }
-  }
-}
-```
+Edit `~/.codeium/windsurf/mcp_config.json`.
 
 ### Other MCP-compatible clients
 
@@ -194,28 +130,3 @@ DeviceCloud uploads are created when you trigger a run — via the CLI, a CI ste
 - **`unzip failed`** (from `get_html_report`) — the `unzip` binary is missing or crashed. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
 - **HTTP 401 / 403** — the API key is wrong or revoked. Regenerate it at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
 - **Empty `list_uploads` for your SHA** — a run probably wasn't triggered for that commit. See "When uploads do and don't exist" above.
-
-## Files
-
-```
-devicecloud-mcp/
-├── src/
-│   ├── index.ts          # server entry point
-│   ├── utils.ts          # pure functions (stripCRLF, filterResults)
-│   └── index.test.ts     # unit tests
-├── dist/                 # compiled output (built by pnpm install)
-├── .github/workflows/
-│   ├── ci.yml            # type-check, build, test on every push and PR
-│   └── publish.yml       # publishes to npm when a v* tag is pushed
-├── package.json
-├── tsconfig.json
-├── pnpm-lock.yaml
-├── .nvmrc
-├── .npmrc
-├── pnpm-workspace.yaml
-├── LICENSE
-├── .gitignore
-└── README.md
-```
-
-`pnpm install` compiles `src/` to `dist/` automatically via the `prepare` script. The repo uses pnpm — `pnpm-lock.yaml` is the lockfile.
