@@ -2,3 +2,4 @@ node_modules/
 dist/
 mcp-publisher
 server.json
+.harness/
