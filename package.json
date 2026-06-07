@@ -37,7 +37,9 @@
     "dev": "tsx src/index.ts",
     "prepare": "tsc",
     "test": "node --import tsx/esm --test src/index.test.ts",
-    "postversion": "git push && git push --tags"
+    "release": "node scripts/release.mjs",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0"
