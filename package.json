@@ -2,7 +2,7 @@
   "name": "devicecloud-mcp",
   "version": "0.1.5",
   "mcpName": "io.github.RubenGlez/devicecloud",
-  "description": "MCP server for DeviceCloud — query Maestro test uploads, results, analytics, and artifacts from any MCP-compatible AI assistant",
+  "description": "Triage failing DeviceCloud Maestro test runs from your AI assistant — fail reasons, failure screenshots, and flaky-flow analytics, without opening the web console",
   "keywords": [
     "mcp",
     "model-context-protocol",

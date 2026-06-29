@@ -1,18 +1,23 @@
 # devicecloud-mcp
 
-A small MCP server that exposes [DeviceCloud](https://console.devicecloud.dev) as tools that any MCP-aware assistant — Claude Code, Cursor, Claude Desktop, etc. — can call directly. DeviceCloud is a platform for running Maestro flows on real devices.
+**Triage failing DeviceCloud runs so your agent can fix them — without opening the console.**
+
+An MCP server that pulls a red [DeviceCloud](https://console.devicecloud.dev) run straight into your editor — fail reasons, failure screenshots, logs, and flow history — so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can find the root cause and fix the flow. You commit; CI re-runs. The console stays closed.
+
+DeviceCloud is a platform for running Maestro flows on real devices. Your CI triggers the runs; this server is how you debug the ones that fail.
 
 It lets the assistant:
 
-- list recent Maestro uploads, filter by name (commit message + short SHA) or date
-- read the per-flow status and `failReason` for any upload
+- **diagnose a run in one call** — failed flows, fail reasons, failure-screenshot paths, and a passed/failed/flaky summary, ready to act on
+- list recent uploads, filter by name (commit message + short SHA) or date
+- read per-flow status and `failReason` for any upload
 - pull the JUnit XML report
 - download and auto-unzip the HTML report (with failure screenshots highlighted)
 - download raw artifacts (logs, screenshots, video) as a zip
-- query per-flow pass-rate analytics over a lookback window
+- spot flaky vs genuinely-broken flows with per-flow pass-rate analytics
 - drill into run history for a specific flow file
 
-The server is read-only against the DeviceCloud API.
+The server is **read-only** against the DeviceCloud REST API — no `dcd` CLI dependency, and nothing an agent does can trigger billable runs. Triggering and re-running tests stay with your CI; cancelling a run stays in the console.
 
 ## Install
 
@@ -101,6 +106,7 @@ You should see a JSON-shaped response with an `uploads` array. If instead you ge
 
 | Tool | Purpose |
 |------|---------|
+| `diagnose_run` | **Start here.** One-call triage of a run (`uploadId` or `name`): folds retries per flow and returns failed flows with fail reasons, durations, and auto-downloaded failure-screenshot paths, plus a passed/failed/flaky summary and suggested next steps. Set `includeReport: false` to skip the screenshot download; `outputDir` sets where the report extracts (default `/tmp`). |
 | `list_uploads` | List recent uploads. Filter by `name` (`*` wildcard), `from`, `to`, `limit`, `offset`. |
 | `get_upload_status` | Overall status + per-test status, duration, `failReason`. Provide `uploadId` or `name`. |
 | `get_results` | Per-flow rows for one upload: `id`, `test_file_name`, `status`, `fail_reason`, `duration_seconds`, `retry_of`. Optional client-side `status` filter. |

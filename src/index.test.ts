@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { stripCRLF, filterResults } from "./utils.js";
+import { stripCRLF, filterResults, buildDiagnosis } from "./utils.js";
 
 describe("stripCRLF", () => {
   it("strips trailing CRLF from a string", () => {
@@ -62,5 +62,73 @@ describe("filterResults", () => {
     const out = JSON.parse(filterResults(json, "PASSED"));
     assert.equal(out.uploadId, "abc123");
     assert.equal(out.extra, "data");
+  });
+});
+
+describe("buildDiagnosis", () => {
+  const status = {
+    uploadId: "u1",
+    name: "Nightly",
+    status: "FAILED",
+    consoleUrl: "https://console/x",
+  };
+
+  it("surfaces a failed flow with its reason, duration, and matched screenshots", () => {
+    const results = {
+      results: [
+        { test_file_name: "./flows/login.yaml", status: "FAILED", fail_reason: "Element not found", duration_seconds: 32, retry_of: null },
+        { test_file_name: "./flows/home.yaml", status: "PASSED", fail_reason: null, duration_seconds: 10, retry_of: null },
+      ],
+    };
+    const d = buildDiagnosis(status, results, {
+      failureScreenshots: ["/tmp/r/login-failure-screenshot-1.png", "/tmp/r/home.png"],
+      reportDir: "/tmp/r",
+    });
+    assert.equal(d.summary.totalFlows, 2);
+    assert.equal(d.summary.passed, 1);
+    assert.equal(d.summary.failed, 1);
+    assert.equal(d.failures.length, 1);
+    assert.equal(d.failures[0].flow, "./flows/login.yaml");
+    assert.equal(d.failures[0].failReason, "Element not found");
+    assert.equal(d.failures[0].durationSeconds, 32);
+    assert.deepEqual(d.failures[0].failureScreenshots, ["/tmp/r/login-failure-screenshot-1.png"]);
+    assert.equal(d.uploadId, "u1");
+    assert.equal(d.reportDir, "/tmp/r");
+  });
+
+  it("folds a fail-then-pass retry into flakyRecovered, not a failure", () => {
+    const results = {
+      results: [
+        { test_file_name: "./flows/flaky.yaml", status: "FAILED", fail_reason: "timeout", duration_seconds: 20, retry_of: null },
+        { test_file_name: "./flows/flaky.yaml", status: "PASSED", fail_reason: null, duration_seconds: 18, retry_of: 1 },
+      ],
+    };
+    const d = buildDiagnosis(status, results);
+    assert.equal(d.summary.totalFlows, 1);
+    assert.equal(d.summary.passed, 1);
+    assert.equal(d.summary.failed, 0);
+    assert.equal(d.summary.flakyRecovered, 1);
+    assert.equal(d.failures.length, 0);
+    assert.ok(d.next.some((n) => n.includes("flaky")));
+  });
+
+  it("falls back to status.tests when results are unavailable", () => {
+    const d = buildDiagnosis(
+      { ...status, tests: [{ name: "./flows/login.yaml", status: "FAILED", durationSeconds: 5, failReason: "boom" }] },
+      null,
+    );
+    assert.equal(d.summary.failed, 1);
+    assert.equal(d.failures[0].flow, "./flows/login.yaml");
+    assert.equal(d.failures[0].failReason, "boom");
+  });
+
+  it("reports no outstanding failures when everything passed", () => {
+    const d = buildDiagnosis(
+      { ...status, status: "PASSED" },
+      { results: [{ test_file_name: "./flows/login.yaml", status: "PASSED", fail_reason: null, duration_seconds: 9, retry_of: null }] },
+    );
+    assert.equal(d.summary.failed, 0);
+    assert.deepEqual(d.failures, []);
+    assert.ok(d.next.some((n) => n.includes("No outstanding failures")));
   });
 });

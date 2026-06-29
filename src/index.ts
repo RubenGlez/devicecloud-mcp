@@ -8,7 +8,8 @@ import {
 import { spawn } from "node:child_process";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join, resolve as resolvePath } from "node:path";
-import { stripCRLF, filterResults } from "./utils.js";
+import { stripCRLF, filterResults, buildDiagnosis } from "./utils.js";
+import type { StatusJson, ResultsJson } from "./utils.js";
 
 const BASE_URL = process.env.DEVICE_CLOUD_BASE_URL ?? "https://api.devicecloud.dev";
 const API_KEY = process.env.DEVICE_CLOUD_API_KEY;
@@ -96,6 +97,23 @@ async function listFilesRecursive(dir: string): Promise<string[]> {
   return files;
 }
 
+// Download + unzip a run's HTML report and return its failure screenshots. Best-effort for diagnose_run:
+// returns null on a non-OK response; the caller swallows write/unzip errors so triage still completes.
+async function extractFailureScreenshots(
+  uploadId: string,
+  parentDir: string,
+): Promise<{ reportDir: string; failureScreenshots: string[] } | null> {
+  const res = await dcFetch({ path: `/results/${uploadId}/html-report`, binary: true });
+  if (res.status >= 400) return null;
+  const reportDir = join(parentDir, `devicecloud-${uploadId}-html-report`);
+  const zipPath = `${reportDir}.zip`;
+  await writeFile(zipPath, res.body);
+  await unzipTo(zipPath, reportDir);
+  const files = await listFilesRecursive(reportDir);
+  const failureScreenshots = files.filter((f) => /failure-screenshot.*\.png$/i.test(f));
+  return { reportDir, failureScreenshots };
+}
+
 type Tool = {
   name: string;
   description: string;
@@ -104,6 +122,83 @@ type Tool = {
 };
 
 const tools: Tool[] = [
+  {
+    name: "diagnose_run",
+    description:
+      "Triage one DeviceCloud run in a single call. Resolves the upload, folds retries per flow, and returns the failed flows with fail reasons, durations, and failure-screenshot paths (auto-downloaded from the HTML report), plus a passed/failed/flaky summary and suggested next steps. The highest-signal tool for debugging a red CI run — use this first, then read the screenshots and fix the flow or app code.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        uploadId: { type: "string", description: "Upload UUID. Provide this or name." },
+        name: { type: "string", description: "Upload name; most recent match wins. Provide this or uploadId." },
+        includeReport: {
+          type: "boolean",
+          description: "Download + unzip the HTML report to surface failure screenshots. Default true.",
+          default: true,
+        },
+        outputDir: { type: "string", description: "Parent directory for the extracted report. Defaults to /tmp." },
+      },
+      additionalProperties: false,
+    },
+    execute: async (args) => {
+      if (!args.uploadId && !args.name) {
+        return { isError: true, content: [{ type: "text", text: "Provide uploadId or name." }] };
+      }
+      const statusRes = await dcFetch({
+        path: "/uploads/status",
+        query: { uploadId: args.uploadId as string | undefined, name: args.name as string | undefined },
+      });
+      if (statusRes.status >= 400) {
+        return { isError: true, content: [{ type: "text", text: `HTTP ${statusRes.status}\n${statusRes.body}` }] };
+      }
+      let statusJson: StatusJson;
+      try {
+        statusJson = stripCRLF(JSON.parse(statusRes.body)) as StatusJson;
+      } catch {
+        return { isError: true, content: [{ type: "text", text: `Unexpected status response:\n${statusRes.body}` }] };
+      }
+      const uploadId = statusJson.uploadId;
+      if (!uploadId) {
+        return { isError: true, content: [{ type: "text", text: "Could not resolve an uploadId for that run." }] };
+      }
+      if (/[/\\]|\.\./.test(uploadId)) {
+        return { isError: true, content: [{ type: "text", text: "Invalid uploadId." }] };
+      }
+
+      let resultsJson: ResultsJson | null = null;
+      const resultsRes = await dcFetch({ path: `/results/${uploadId}` });
+      if (resultsRes.status < 400) {
+        try {
+          resultsJson = stripCRLF(JSON.parse(resultsRes.body)) as ResultsJson;
+        } catch {
+          resultsJson = null;
+        }
+      }
+
+      // Only pay for the report download when something actually failed.
+      const anyFailure =
+        statusJson.status === "FAILED" ||
+        (statusJson.tests ?? []).some((t) => t.status === "FAILED") ||
+        (resultsJson?.results ?? []).some((r) => r.status === "FAILED");
+      let reportDir: string | undefined;
+      let failureScreenshots: string[] = [];
+      if (anyFailure && args.includeReport !== false) {
+        const parent = resolvePath((args.outputDir as string | undefined) ?? "/tmp");
+        try {
+          const extracted = await extractFailureScreenshots(uploadId, parent);
+          if (extracted) {
+            reportDir = extracted.reportDir;
+            failureScreenshots = extracted.failureScreenshots;
+          }
+        } catch {
+          // Screenshots are best-effort; a report download/unzip failure shouldn't sink the triage.
+        }
+      }
+
+      const diagnosis = buildDiagnosis(statusJson, resultsJson, { failureScreenshots, reportDir });
+      return { content: [{ type: "text", text: JSON.stringify(diagnosis, null, 2) }] };
+    },
+  },
   {
     name: "list_uploads",
     description:
