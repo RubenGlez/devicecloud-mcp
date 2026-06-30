@@ -38,3 +38,9 @@ The MCP delivers the triage; your agent does the fix. One invocation turns a red
 - The DeviceCloud REST API (`https://api.devicecloud.dev`, `x-app-api-key` header) is **read-only**: uploads, results, flows. The MCP wraps 100% of it. All write actions (run, retry, cancel) live only in the `dcd` CLI or the dashboard, and are intentionally out of scope.
 - Auth is a single `DEVICE_CLOUD_API_KEY` env var.
 - Pure logic (CRLF stripping, result filtering, triage synthesis) lives in `src/utils.ts` and is unit-tested; `src/index.ts` does the MCP wiring and I/O.
+
+## Release
+
+Releases are local; there is no CI publish. Run `pnpm release` (patch), `pnpm release:minor`, or `pnpm release:major`. The `scripts/release.mjs` flow validates, builds, tests, audits, validates `server.json`, bumps the version, syncs the gitignored local `server.json`, commits and tags, pushes, publishes to npm, then publishes metadata to the official MCP registry with the bundled `mcp-publisher`.
+
+The registry JWT is short-lived. If the final `mcp-publisher publish` returns 401, npm and the git tag are already live; finish the registry step with `./mcp-publisher login github && ./mcp-publisher publish` (complete the GitHub device authorization promptly). `server.json` and the `mcp-publisher` binary are gitignored and local-only.

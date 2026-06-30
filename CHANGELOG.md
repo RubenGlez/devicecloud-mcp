@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-30
+
+### Added
+- `suite_health`: classify every flow over a lookback window as healthy, flaky,
+  broken, or regression, ranked worst-first, so you can tell whether a failure is
+  worth fixing before diving in. Regressions (a flow that was passing and recently
+  started failing) are surfaced first. Filters mirror `list_flow_analytics`.
+
+### Changed
+- Sharpened the README around the triage value the server delivers, and renamed
+  the DeviceCloud web UI from "console" to "dashboard" in prose for clarity.
+
+## [0.2.1] - 2026-06-30
+
+### Changed
+- Removed em-dashes from the README and docs.
+
 ## [0.2.0] - 2026-06-30
 
 ### Added
