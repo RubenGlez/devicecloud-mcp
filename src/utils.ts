@@ -156,3 +156,110 @@ export function buildDiagnosis(
     next,
   };
 }
+
+// --- suite_health classification ---
+
+type FlowSummary = {
+  flow_name?: string;
+  file_name?: string;
+  pass_rate?: number;
+  passed_runs?: number;
+  failed_runs?: number;
+  last_run_at?: string;
+  daily_data?: Record<string, string | null>;
+};
+
+export type FlowsJson = { flows?: FlowSummary[] };
+
+type FlowCategory = "healthy" | "flaky" | "broken" | "regression";
+
+type FlowHealth = {
+  flow: string;
+  file: string;
+  category: FlowCategory;
+  passRate: number;
+  passedRuns: number;
+  failedRuns: number;
+  lastRunAt: string | null;
+};
+
+export type SuiteHealth = {
+  totalFlows: number;
+  summary: { healthy: number; flaky: number; broken: number; regression: number };
+  regressions: FlowHealth[];
+  broken: FlowHealth[];
+  flaky: FlowHealth[];
+  healthyCount: number;
+  next: string[];
+};
+
+// A flow at or above this pass rate is healthy; below BROKEN_MAX it's broken; in between it's flaky.
+const HEALTHY_MIN_PASS_RATE = 95;
+const BROKEN_MAX_PASS_RATE = 50;
+
+// Regression: the flow had a green day earlier in the window and its most recent day with data is
+// failing (or mixed). A chronically-broken flow never passed, so it has no green day and stays "broken".
+function recentlyRegressed(daily: Record<string, string | null> | undefined): boolean {
+  if (!daily) return false;
+  const days = Object.entries(daily)
+    .filter(([, s]) => s != null)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  if (days.length < 2) return false;
+  const latest = days[days.length - 1][1];
+  if (latest !== "failed" && latest !== "mixed") return false; // currently passing or recovered
+  return days.slice(0, -1).some(([, s]) => s === "passed");
+}
+
+function classify(f: FlowSummary): FlowCategory {
+  const passRate = f.pass_rate ?? 100;
+  const failed = f.failed_runs ?? 0;
+  if (recentlyRegressed(f.daily_data)) return "regression";
+  if (failed === 0 || passRate >= HEALTHY_MIN_PASS_RATE) return "healthy";
+  if (passRate < BROKEN_MAX_PASS_RATE) return "broken";
+  return "flaky";
+}
+
+// Classify every flow in a /flows analytics payload so an agent can prioritize: which failures are
+// fresh regressions worth fixing now, which are chronically broken, and which are just flaky.
+export function buildSuiteHealth(flowsJson: FlowsJson): SuiteHealth {
+  const all: FlowHealth[] = (flowsJson.flows ?? []).map((f) => ({
+    flow: f.flow_name ?? f.file_name ?? "(unknown)",
+    file: f.file_name ?? "(unknown)",
+    category: classify(f),
+    passRate: f.pass_rate ?? 0,
+    passedRuns: f.passed_runs ?? 0,
+    failedRuns: f.failed_runs ?? 0,
+    lastRunAt: f.last_run_at ?? null,
+  }));
+
+  // Worst first: lowest pass rate, then most failures.
+  const byWorst = (a: FlowHealth, b: FlowHealth) => a.passRate - b.passRate || b.failedRuns - a.failedRuns;
+  const regressions = all.filter((f) => f.category === "regression").sort(byWorst);
+  const broken = all.filter((f) => f.category === "broken").sort(byWorst);
+  const flaky = all.filter((f) => f.category === "flaky").sort(byWorst);
+  const healthyCount = all.filter((f) => f.category === "healthy").length;
+
+  const next: string[] = [];
+  if (regressions.length) {
+    next.push(
+      `${regressions.length} flow(s) recently regressed (were passing, now failing); fix these first, a recent change likely broke them.`,
+    );
+  }
+  if (broken.length) {
+    next.push(`${broken.length} flow(s) are consistently broken; likely a real, persistent failure.`);
+  }
+  if (flaky.length) {
+    next.push(`${flaky.length} flaky flow(s) pass and fail inconsistently; may be test-stability issues, not product bugs.`);
+  }
+  if (!next.length) next.push("Suite is healthy; all flows passing consistently.");
+
+  return {
+    totalFlows: all.length,
+    summary: { healthy: healthyCount, flaky: flaky.length, broken: broken.length, regression: regressions.length },
+    regressions,
+    broken,
+    flaky,
+    healthyCount,
+    next,
+  };
+}

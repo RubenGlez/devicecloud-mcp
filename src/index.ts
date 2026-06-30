@@ -8,8 +8,8 @@ import {
 import { spawn } from "node:child_process";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join, resolve as resolvePath } from "node:path";
-import { stripCRLF, filterResults, buildDiagnosis } from "./utils.js";
-import type { StatusJson, ResultsJson } from "./utils.js";
+import { stripCRLF, filterResults, buildDiagnosis, buildSuiteHealth } from "./utils.js";
+import type { StatusJson, ResultsJson, FlowsJson } from "./utils.js";
 
 const BASE_URL = process.env.DEVICE_CLOUD_BASE_URL ?? "https://api.devicecloud.dev";
 const API_KEY = process.env.DEVICE_CLOUD_API_KEY;
@@ -197,6 +197,33 @@ const tools: Tool[] = [
 
       const diagnosis = buildDiagnosis(statusJson, resultsJson, { failureScreenshots, reportDir });
       return { content: [{ type: "text", text: JSON.stringify(diagnosis, null, 2) }] };
+    },
+  },
+  {
+    name: "suite_health",
+    description:
+      "Classify every Maestro flow over a lookback window into healthy, flaky, broken, or regression, ranked worst-first, so you can tell whether a failure is worth fixing before diving in. Regressions (a flow that was passing and recently started failing) are surfaced first, since a recent change likely broke them. Use this to prioritize, then diagnose_run to fix a specific run. Filters mirror list_flow_analytics.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: { type: "string", enum: ["android", "ios"], description: "Filter by platform." },
+        appId: { type: "string", description: "Filter by app bundle id, e.g. com.example.app." },
+        days: { type: "integer", minimum: 1, description: "Lookback window. Default 14." },
+        startDate: { type: "string", description: "ISO 8601 start of range. Overrides days." },
+        endDate: { type: "string", description: "ISO 8601 end of range. Defaults to now." },
+        tags: { type: "string", description: "Comma-separated tag filter (e.g. smoke,critical)." },
+      },
+      additionalProperties: false,
+    },
+    execute: async (args) => {
+      const res = await dcFetch({ path: "/flows", query: args as Record<string, string | number | undefined> });
+      if (res.status >= 400) return asResult(res);
+      try {
+        const json = stripCRLF(JSON.parse(res.body)) as FlowsJson;
+        return { content: [{ type: "text", text: JSON.stringify(buildSuiteHealth(json), null, 2) }] };
+      } catch {
+        return asResult(res);
+      }
     },
   },
   {

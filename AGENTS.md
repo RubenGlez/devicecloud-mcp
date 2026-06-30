@@ -31,7 +31,7 @@ The MCP delivers the triage; your agent does the fix. One invocation turns a red
 
 ## The capability that earns the pitch
 
-`diagnose_run` turns an upload ID (or name) into a complete triage object in one call: which flows failed, why, the failure screenshots, and a passed/failed/flaky summary, assembled for the agent to act on. Backed by flaky-vs-broken analytics (`list_flow_analytics`, `get_flow_runs`) so the agent knows whether a failure is even worth fixing.
+`diagnose_run` turns an upload ID (or name) into a complete triage object in one call: which flows failed, why, the failure screenshots, and a passed/failed/flaky summary, assembled for the agent to act on. Paired with `suite_health`, which classifies every flow as healthy, flaky, broken, or regression over a window, so the agent knows whether a failure is worth fixing before diving in.
 
 ## Architecture notes
 

@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { stripCRLF, filterResults, buildDiagnosis } from "./utils.js";
+import { stripCRLF, filterResults, buildDiagnosis, buildSuiteHealth } from "./utils.js";
 
 describe("stripCRLF", () => {
   it("strips trailing CRLF from a string", () => {
@@ -130,5 +130,54 @@ describe("buildDiagnosis", () => {
     assert.equal(d.summary.failed, 0);
     assert.deepEqual(d.failures, []);
     assert.ok(d.next.some((n) => n.includes("No outstanding failures")));
+  });
+});
+
+describe("buildSuiteHealth", () => {
+  it("classifies healthy, flaky, broken, and regression flows", () => {
+    const h = buildSuiteHealth({
+      flows: [
+        { flow_name: "Healthy", file_name: "ok.yaml", pass_rate: 100, passed_runs: 50, failed_runs: 0, daily_data: { "2026-06-28": "passed", "2026-06-29": "passed" } },
+        { flow_name: "Flaky", file_name: "flaky.yaml", pass_rate: 70, passed_runs: 35, failed_runs: 15, daily_data: { "2026-06-28": "mixed", "2026-06-29": "passed" } },
+        { flow_name: "Broken", file_name: "broken.yaml", pass_rate: 10, passed_runs: 5, failed_runs: 45, daily_data: { "2026-06-28": "failed", "2026-06-29": "failed" } },
+        { flow_name: "Regressed", file_name: "reg.yaml", pass_rate: 80, passed_runs: 40, failed_runs: 10, daily_data: { "2026-06-27": "passed", "2026-06-28": "passed", "2026-06-29": "failed" } },
+      ],
+    });
+    assert.equal(h.totalFlows, 4);
+    assert.deepEqual(h.summary, { healthy: 1, flaky: 1, broken: 1, regression: 1 });
+    assert.equal(h.regressions[0].file, "reg.yaml");
+    assert.equal(h.broken[0].file, "broken.yaml");
+    assert.equal(h.flaky[0].file, "flaky.yaml");
+    assert.ok(h.next.some((n) => n.includes("regressed")));
+  });
+
+  it("does not flag a chronically-broken flow (never passed) as a regression", () => {
+    const h = buildSuiteHealth({
+      flows: [{ flow_name: "Broken", file_name: "broken.yaml", pass_rate: 0, passed_runs: 0, failed_runs: 30, daily_data: { "2026-06-28": "failed", "2026-06-29": "failed" } }],
+    });
+    assert.equal(h.summary.regression, 0);
+    assert.equal(h.summary.broken, 1);
+  });
+
+  it("does not flag a recovered flow (latest day passed) as a regression", () => {
+    const h = buildSuiteHealth({
+      flows: [{ flow_name: "Recovered", file_name: "rec.yaml", pass_rate: 90, passed_runs: 45, failed_runs: 5, daily_data: { "2026-06-27": "passed", "2026-06-28": "failed", "2026-06-29": "passed" } }],
+    });
+    assert.equal(h.summary.regression, 0);
+    assert.equal(h.summary.flaky, 1);
+  });
+
+  it("reports a healthy suite when there are no problems", () => {
+    const h = buildSuiteHealth({ flows: [{ flow_name: "A", file_name: "a.yaml", pass_rate: 100, passed_runs: 10, failed_runs: 0 }] });
+    assert.deepEqual(h.regressions, []);
+    assert.deepEqual(h.broken, []);
+    assert.deepEqual(h.flaky, []);
+    assert.ok(h.next.some((n) => n.includes("healthy")));
+  });
+
+  it("handles an empty flows payload", () => {
+    const h = buildSuiteHealth({});
+    assert.equal(h.totalFlows, 0);
+    assert.deepEqual(h.summary, { healthy: 0, flaky: 0, broken: 0, regression: 0 });
   });
 });

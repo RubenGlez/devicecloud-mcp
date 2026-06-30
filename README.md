@@ -9,6 +9,7 @@ DeviceCloud is a platform for running Maestro flows on real devices. Your CI tri
 It lets the assistant:
 
 - **diagnose a run in one call**: failed flows, fail reasons, failure-screenshot paths, and a passed/failed/flaky summary, ready to act on
+- **rank suite health**: classify every flow as healthy, flaky, broken, or regression over a window so you know what's worth fixing first
 - list recent uploads, filter by name (commit message + short SHA) or date
 - read per-flow status and `failReason` for any upload
 - pull the JUnit XML report
@@ -107,6 +108,7 @@ You should see a JSON-shaped response with an `uploads` array. If instead you ge
 | Tool | Purpose |
 |------|---------|
 | `diagnose_run` | **Start here.** One-call triage of a run (`uploadId` or `name`): folds retries per flow and returns failed flows with fail reasons, durations, and auto-downloaded failure-screenshot paths, plus a passed/failed/flaky summary and suggested next steps. Set `includeReport: false` to skip the screenshot download; `outputDir` sets where the report extracts (default `/tmp`). |
+| `suite_health` | Classify every flow over a lookback window into healthy, flaky, broken, or regression, ranked worst-first, so you can tell whether a failure is worth fixing before diving in. Regressions (passing, then recently failing) come first. Same filters as `list_flow_analytics` (`platform`, `appId`, `days`, `startDate`, `endDate`, `tags`). |
 | `list_uploads` | List recent uploads. Filter by `name` (`*` wildcard), `from`, `to`, `limit`, `offset`. |
 | `get_upload_status` | Overall status + per-test status, duration, `failReason`. Provide `uploadId` or `name`. |
 | `get_results` | Per-flow rows for one upload: `id`, `test_file_name`, `status`, `fail_reason`, `duration_seconds`, `retry_of`. Optional client-side `status` filter. |

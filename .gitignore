@@ -3,3 +3,4 @@ dist/
 mcp-publisher
 server.json
 .harness/
+.claude/worktrees/
