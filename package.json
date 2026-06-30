@@ -1,6 +1,6 @@
 {
   "name": "devicecloud-mcp",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "mcpName": "io.github.RubenGlez/devicecloud",
   "description": "Triage failing DeviceCloud Maestro test runs from your AI assistant — fail reasons, failure screenshots, and flaky-flow analytics, without opening the web console",
   "keywords": [
