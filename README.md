@@ -1,8 +1,8 @@
 # devicecloud-mcp
 
-**Triage failing DeviceCloud runs so your agent can fix them, without opening the console.**
+**Triage failing DeviceCloud runs so your agent can fix them, without opening the dashboard.**
 
-An MCP server that pulls a red [DeviceCloud](https://console.devicecloud.dev) run straight into your editor (fail reasons, failure screenshots, logs, and flow history) so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can find the root cause and fix the flow. You commit; CI re-runs. The console stays closed.
+When a [DeviceCloud](https://console.devicecloud.dev) run goes red in CI, the reason why is buried in the web dashboard: the fail reason, the failure screenshot, the logs. This server pulls all of it straight into your editor, so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can read the evidence, find the root cause, and fix the flow or app code. You commit, CI re-runs, and the dashboard stays closed.
 
 DeviceCloud is a platform for running Maestro flows on real devices. Your CI triggers the runs; this server is how you debug the ones that fail.
 
@@ -17,7 +17,7 @@ It lets the assistant:
 - spot flaky vs genuinely-broken flows with per-flow pass-rate analytics
 - drill into run history for a specific flow file
 
-The server is **read-only** against the DeviceCloud REST API: no `dcd` CLI dependency, and nothing an agent does can trigger billable runs. Triggering and re-running tests stay with your CI; cancelling a run stays in the console.
+The server is **read-only** against the DeviceCloud REST API: no `dcd` CLI dependency, and nothing an agent does can trigger billable runs. Triggering and re-running tests stay with your CI; cancelling a run stays in the dashboard.
 
 ## Install
 
