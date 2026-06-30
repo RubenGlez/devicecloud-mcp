@@ -1,14 +1,14 @@
 # devicecloud-mcp
 
-**Triage failing DeviceCloud runs so your agent can fix them — without opening the console.**
+**Triage failing DeviceCloud runs so your agent can fix them, without opening the console.**
 
-An MCP server that pulls a red [DeviceCloud](https://console.devicecloud.dev) run straight into your editor — fail reasons, failure screenshots, logs, and flow history — so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can find the root cause and fix the flow. You commit; CI re-runs. The console stays closed.
+An MCP server that pulls a red [DeviceCloud](https://console.devicecloud.dev) run straight into your editor (fail reasons, failure screenshots, logs, and flow history) so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can find the root cause and fix the flow. You commit; CI re-runs. The console stays closed.
 
 DeviceCloud is a platform for running Maestro flows on real devices. Your CI triggers the runs; this server is how you debug the ones that fail.
 
 It lets the assistant:
 
-- **diagnose a run in one call** — failed flows, fail reasons, failure-screenshot paths, and a passed/failed/flaky summary, ready to act on
+- **diagnose a run in one call**: failed flows, fail reasons, failure-screenshot paths, and a passed/failed/flaky summary, ready to act on
 - list recent uploads, filter by name (commit message + short SHA) or date
 - read per-flow status and `failReason` for any upload
 - pull the JUnit XML report
@@ -17,7 +17,7 @@ It lets the assistant:
 - spot flaky vs genuinely-broken flows with per-flow pass-rate analytics
 - drill into run history for a specific flow file
 
-The server is **read-only** against the DeviceCloud REST API — no `dcd` CLI dependency, and nothing an agent does can trigger billable runs. Triggering and re-running tests stay with your CI; cancelling a run stays in the console.
+The server is **read-only** against the DeviceCloud REST API: no `dcd` CLI dependency, and nothing an agent does can trigger billable runs. Triggering and re-running tests stay with your CI; cancelling a run stays in the console.
 
 ## Install
 
@@ -41,7 +41,7 @@ Get your API key at [console.devicecloud.dev/settings](https://console.deviceclo
 
 ## Configure your assistant
 
-The config block above is the same for every client — only the file location differs.
+The config block above is the same for every client; only the file location differs.
 
 ### Claude Code (project-scoped, `.mcp.json`)
 
@@ -68,7 +68,7 @@ Then export the key from your shell profile so Claude Code's child process inher
 export DEVICE_CLOUD_API_KEY="<your-key>"
 ```
 
-> Setting it only in an interactive shell isn't enough — Claude Code spawns the MCP from its own environment, so the variable needs to be in the profile.
+> Setting it only in an interactive shell isn't enough; Claude Code spawns the MCP from its own environment, so the variable needs to be in the profile.
 
 ### Claude Code (user-scoped, `~/.claude.json`)
 
@@ -76,7 +76,7 @@ If you want it available everywhere instead of per-project, add the same `device
 
 ### Claude Desktop
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Restart Claude Desktop after saving — a tools icon appears in the chat input once the server connects.
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows). Restart Claude Desktop after saving; a tools icon appears in the chat input once the server connects.
 
 ### Cursor
 
@@ -100,7 +100,7 @@ After restarting your assistant:
 List recent DeviceCloud uploads, limit 3.
 ```
 
-You should see a JSON-shaped response with an `uploads` array. If instead you get `DEVICE_CLOUD_API_KEY env var is required`, the variable isn't reaching the spawned process — re-check that it's exported from your shell profile (not just the current shell).
+You should see a JSON-shaped response with an `uploads` array. If instead you get `DEVICE_CLOUD_API_KEY env var is required`, the variable isn't reaching the spawned process; re-check that it's exported from your shell profile (not just the current shell).
 
 ## Available tools
 
@@ -128,11 +128,11 @@ Filter with `name = "*a1b2c3d4*"` to find every upload for a specific commit. Th
 
 ### When uploads do and don't exist
 
-DeviceCloud uploads are created when you trigger a run — via the CLI, a CI step, the GitHub Action, or the API directly. Whether a given commit has an upload depends entirely on your CI setup. If `list_uploads` returns nothing for a SHA you expect, the run probably wasn't triggered for that commit.
+DeviceCloud uploads are created when you trigger a run, via the CLI, a CI step, the GitHub Action, or the API directly. Whether a given commit has an upload depends entirely on your CI setup. If `list_uploads` returns nothing for a SHA you expect, the run probably wasn't triggered for that commit.
 
 ## Troubleshooting
 
-- **`DEVICE_CLOUD_API_KEY env var is required`** — the variable isn't visible to the spawned MCP. Export it from `~/.zshrc` / `~/.bashrc`, restart your assistant.
-- **`unzip failed`** (from `get_html_report`) — the `unzip` binary is missing or crashed. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
-- **HTTP 401 / 403** — the API key is wrong or revoked. Regenerate it at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
-- **Empty `list_uploads` for your SHA** — a run probably wasn't triggered for that commit. See "When uploads do and don't exist" above.
+- **`DEVICE_CLOUD_API_KEY env var is required`**: the variable isn't visible to the spawned MCP. Export it from `~/.zshrc` / `~/.bashrc`, restart your assistant.
+- **`unzip failed`** (from `get_html_report`): the `unzip` binary is missing or crashed. Install with `brew install unzip` (macOS ships with it; Linux usually does too).
+- **HTTP 401 / 403**: the API key is wrong or revoked. Regenerate it at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
+- **Empty `list_uploads` for your SHA**: a run probably wasn't triggered for that commit. See "When uploads do and don't exist" above.
