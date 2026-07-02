@@ -44,3 +44,18 @@ The MCP delivers the triage; your agent does the fix. One invocation turns a red
 Releases are local; there is no CI publish. Run `pnpm release` (patch), `pnpm release:minor`, or `pnpm release:major`. The `scripts/release.mjs` flow validates, builds, tests, audits, validates `server.json`, bumps the version, syncs the gitignored local `server.json`, commits and tags, pushes, publishes to npm, then publishes metadata to the official MCP registry with the bundled `mcp-publisher`.
 
 The registry JWT is short-lived. If the final `mcp-publisher publish` returns 401, npm and the git tag are already live; finish the registry step with `./mcp-publisher login github && ./mcp-publisher publish` (complete the GitHub device authorization promptly). `server.json` and the `mcp-publisher` binary are gitignored and local-only.
+
+<!-- doctier:begin -->
+## Project context
+
+Managed by doctier — do not edit between the markers.
+
+Read these for project context:
+
+- `.harness/engineering/architecture.md`
+- `.harness/engineering/implementation-plan.md`
+- `.harness/product/CONTEXT.md`
+- `.harness/product/competitors.md`
+- `.harness/product/product.md`
+- `.harness/product/roadmap.md`
+<!-- doctier:end -->
