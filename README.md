@@ -22,6 +22,8 @@ The server is **read-only** against the DeviceCloud REST API: no `dcd` CLI depen
 
 ## Install
 
+**Requires Node.js 24+** — check with `node --version`. There's no separate install step; the server runs on demand via `npx`.
+
 Add this to your MCP client config:
 
 ```json
@@ -39,6 +41,16 @@ Add this to your MCP client config:
 ```
 
 Get your API key at [console.devicecloud.dev/settings](https://console.devicecloud.dev/settings).
+
+### Claude Code: add it with one command
+
+Skip editing JSON — register the server in one step:
+
+```sh
+claude mcp add devicecloud --env DEVICE_CLOUD_API_KEY=<your-key> -- npx -y devicecloud-mcp
+```
+
+Add `-s user` to make it available in every project instead of only the current one.
 
 ## Configure your assistant
 
