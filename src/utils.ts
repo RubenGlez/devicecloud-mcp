@@ -68,6 +68,13 @@ function flowKey(path: string): string {
   return (path.split("/").pop() ?? path).replace(/\.ya?ml$/i, "").toLowerCase();
 }
 
+// Match a flow key as a whole word within a screenshot filename, not a loose substring —
+// e.g. flow "login" must not match "relogin-failure-screenshot-1.png".
+function matchesFlowKey(screenshot: string, key: string): boolean {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, "i").test(screenshot.toLowerCase());
+}
+
 // Fold a run's status + per-flow results into one triage object an agent can act on.
 // Retries are collapsed per flow: a flow that failed then passed counts as flaky-recovered, not a failure.
 export function buildDiagnosis(
@@ -124,7 +131,7 @@ export function buildDiagnosis(
         failReason: last.failReason,
         durationSeconds: last.durationSeconds,
         retried: attempts.length > 1,
-        failureScreenshots: key ? screenshots.filter((s) => s.toLowerCase().includes(key)) : [],
+        failureScreenshots: key ? screenshots.filter((s) => matchesFlowKey(s, key)) : [],
       });
       continue;
     }

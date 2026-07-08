@@ -96,6 +96,17 @@ describe("buildDiagnosis", () => {
     assert.equal(d.reportDir, "/tmp/r");
   });
 
+  it("does not match a screenshot whose name merely contains the flow key as a substring", () => {
+    const results = {
+      results: [{ test_file_name: "./flows/login.yaml", status: "FAILED", fail_reason: "boom", duration_seconds: 5, retry_of: null }],
+    };
+    const d = buildDiagnosis(status, results, {
+      failureScreenshots: ["/tmp/r/relogin-failure-screenshot-1.png", "/tmp/r/login-failure-screenshot-1.png"],
+      reportDir: "/tmp/r",
+    });
+    assert.deepEqual(d.failures[0].failureScreenshots, ["/tmp/r/login-failure-screenshot-1.png"]);
+  });
+
   it("folds a fail-then-pass retry into flakyRecovered, not a failure", () => {
     const results = {
       results: [
