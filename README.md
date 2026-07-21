@@ -4,8 +4,6 @@
 
 **Triage failing DeviceCloud runs so your agent can fix them, without opening the dashboard.**
 
-**Project page:** [rubenglez.dev/devicecloud-mcp](https://rubenglez.dev/devicecloud-mcp)
-
 When a [DeviceCloud](https://console.devicecloud.dev) run goes red in CI, the reason why is buried in the web dashboard: the fail reason, the failure screenshot, the logs. This server pulls all of it straight into your editor, so your AI assistant (Claude Code, Cursor, Claude Desktop, etc.) can read the evidence, find the root cause, and fix the flow or app code. You commit, CI re-runs, and the dashboard stays closed.
 
 DeviceCloud is a platform for running Maestro flows on real devices. Your CI triggers the runs; this server is how you debug the ones that fail.

@@ -15,7 +15,6 @@
     "type": "git",
     "url": "git+https://github.com/RubenGlez/devicecloud-mcp.git"
   },
-  "homepage": "https://rubenglez.dev/devicecloud-mcp",
   "bugs": {
     "url": "https://github.com/RubenGlez/devicecloud-mcp/issues"
   },
