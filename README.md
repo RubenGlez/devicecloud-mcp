@@ -24,7 +24,7 @@ The server is **read-only** against the DeviceCloud REST API: no `dcd` CLI depen
 
 ## Install
 
-**Requires Node.js 24+** — check with `node --version`. There's no separate install step; the server runs on demand via `npx`.
+**Requires Node.js 22+** — check with `node --version`. There's no separate install step; the server runs on demand via `npx`.
 
 Add this to your MCP client config:
 

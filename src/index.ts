@@ -6,6 +6,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join, resolve as resolvePath } from "node:path";
 import { stripCRLF, filterResults, buildDiagnosis, buildSuiteHealth } from "./utils.js";
@@ -13,6 +14,9 @@ import type { StatusJson, ResultsJson, FlowsJson } from "./utils.js";
 
 const BASE_URL = process.env.DEVICE_CLOUD_BASE_URL ?? "https://api.devicecloud.dev";
 const API_KEY = process.env.DEVICE_CLOUD_API_KEY;
+const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+  version: string;
+};
 
 if (!API_KEY) {
   console.error("[devicecloud-mcp] DEVICE_CLOUD_API_KEY env var is required");
@@ -456,7 +460,7 @@ const tools: Tool[] = [
 ];
 
 const server = new Server(
-  { name: "devicecloud-mcp", version: "0.1.3" },
+  { name: "devicecloud-mcp", version },
   { capabilities: { tools: {} } },
 );
 
