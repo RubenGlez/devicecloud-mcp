@@ -58,7 +58,7 @@ writeFileSync('server.json', JSON.stringify(serverJson, null, 2) + '\n')
 
 run('git add package.json')
 run(`git commit -m "${tag}"`)
-run(`git tag ${tag}`)
+run(`git tag -a "${tag}" -m "${tag}"`)
 run('git push && git push --tags')
 run('pnpm publish --no-git-checks')
 
